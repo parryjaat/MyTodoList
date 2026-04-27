@@ -1,106 +1,75 @@
-import React, { useEffect, useState } from "react";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-import HomeScreen from "./src/screens/HomeScreen";
-import AddTodoScreen from "./src/screens/AddTodoScreen";
-
-const Stack = createNativeStackNavigator();
-const STORAGE_KEY = "MY_TODO_LIST";
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+} from "react-native";
 
 export default function App() {
-  const [todos, setTodos] = useState([]);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    loadTodos();
-  }, []);
-
-  useEffect(() => {
-    if (loaded) {
-      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-    }
-  }, [todos, loaded]);
-
-  const loadTodos = async () => {
-    const savedTodos = await AsyncStorage.getItem(STORAGE_KEY);
-
-    if (savedTodos) {
-      setTodos(JSON.parse(savedTodos));
-    } else {
-      setTodos([
-        {
-          id: "1",
-          title: "Help mum",
-          description: "Help mum with house work.",
-          finished: false,
-          expanded: false,
-        },
-        {
-          id: "2",
-          title: "Go gym",
-          description: "Complete workout session.",
-          finished: false,
-          expanded: false,
-        },
-      ]);
-    }
-
-    setLoaded(true);
-  };
-
-  const addTodo = (title, description) => {
-    const newTodo = {
-      id: Date.now().toString(),
-      title,
-      description,
-      finished: false,
-      expanded: false,
-    };
-
-    setTodos((currentTodos) => [...currentTodos, newTodo]);
-  };
-
-  const toggleTodo = (id) => {
-    setTodos((currentTodos) =>
-      currentTodos.map((todo) =>
-        todo.id === id ? { ...todo, expanded: !todo.expanded } : todo
-      )
-    );
-  };
-
-  const finishTodo = (id) => {
-    setTodos((currentTodos) =>
-      currentTodos.map((todo) =>
-        todo.id === id ? { ...todo, finished: true } : todo
-      )
-    );
-  };
-
-  const deleteTodo = (id) => {
-    setTodos((currentTodos) => currentTodos.filter((todo) => todo.id !== id));
-  };
+  const todos = [
+    { id: "1", title: "Help mum" },
+    { id: "2", title: "Go gym" },
+    { id: "3", title: "Finish assignment 1" },
+  ];
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Home">
-          {(props) => (
-            <HomeScreen
-              {...props}
-              todos={todos}
-              toggleTodo={toggleTodo}
-              finishTodo={finishTodo}
-              deleteTodo={deleteTodo}
-            />
-          )}
-        </Stack.Screen>
+    <View style={styles.container}>
+      <Text style={styles.title}>My Todo List</Text>
 
-        <Stack.Screen name="Add New Todo">
-          {(props) => <AddTodoScreen {...props} addTodo={addTodo} />}
-        </Stack.Screen>
-      </Stack.Navigator>
-    </NavigationContainer>
+      <FlatList
+        data={todos}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.todoItem}>
+            <Text style={styles.todoText}>{item.title}</Text>
+          </View>
+        )}
+      />
+
+      <TouchableOpacity style={styles.addButton}>
+        <Text style={styles.addButtonText}>Add New Todo</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 80,
+    paddingHorizontal: 20,
+    backgroundColor: "#ffffff",
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 25,
+  },
+  todoItem: {
+    backgroundColor: "#f2f2f2",
+    padding: 18,
+    borderRadius: 14,
+    marginBottom: 14,
+  },
+  todoText: {
+    fontSize: 16,
+  },
+  addButton: {
+    position: "absolute",
+    bottom: 35,
+    left: 20,
+    right: 20,
+    backgroundColor: "#1E90FF",
+    padding: 18,
+    borderRadius: 16,
+    alignItems: "center",
+  },
+  addButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+});
