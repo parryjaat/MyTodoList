@@ -1,85 +1,106 @@
-import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-} from "react-native";
+import React, { useEffect, useState } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import HomeScreen from "./src/screens/HomeScreen";
+import AddTodoScreen from "./src/screens/AddTodoScreen";
+
+const Stack = createNativeStackNavigator();
+const STORAGE_KEY = "MY_TODO_LIST";
 
 export default function App() {
-  const todos = [
-    { id: "1", title: "Buy groceries" },
-    { id: "2", title: "Go gym" },
-    { id: "3", title: "Finish assignment" },
-  ];
+  const [todos, setTodos] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    loadTodos();
+  }, []);
+
+  useEffect(() => {
+    if (loaded) {
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    }
+  }, [todos, loaded]);
+
+  const loadTodos = async () => {
+    const savedTodos = await AsyncStorage.getItem(STORAGE_KEY);
+
+    if (savedTodos) {
+      setTodos(JSON.parse(savedTodos));
+    } else {
+      setTodos([
+        {
+          id: "1",
+          title: "Help mum",
+          description: "Help mum with house work.",
+          finished: false,
+          expanded: false,
+        },
+        {
+          id: "2",
+          title: "Go gym",
+          description: "Complete workout session.",
+          finished: false,
+          expanded: false,
+        },
+      ]);
+    }
+
+    setLoaded(true);
+  };
+
+  const addTodo = (title, description) => {
+    const newTodo = {
+      id: Date.now().toString(),
+      title,
+      description,
+      finished: false,
+      expanded: false,
+    };
+
+    setTodos((currentTodos) => [...currentTodos, newTodo]);
+  };
+
+  const toggleTodo = (id) => {
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === id ? { ...todo, expanded: !todo.expanded } : todo
+      )
+    );
+  };
+
+  const finishTodo = (id) => {
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === id ? { ...todo, finished: true } : todo
+      )
+    );
+  };
+
+  const deleteTodo = (id) => {
+    setTodos((currentTodos) => currentTodos.filter((todo) => todo.id !== id));
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>My Todo List</Text>
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name="Home">
+          {(props) => (
+            <HomeScreen
+              {...props}
+              todos={todos}
+              toggleTodo={toggleTodo}
+              finishTodo={finishTodo}
+              deleteTodo={deleteTodo}
+            />
+          )}
+        </Stack.Screen>
 
-      <FlatList
-        data={todos}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.todoItem}>
-            <Text style={styles.todoText}>{item.title}</Text>
-          </View>
-        )}
-        contentContainerStyle={styles.list}
-      />
-
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>+ Add Todo</Text>
-      </TouchableOpacity>
-    </View>
+        <Stack.Screen name="Add New Todo">
+          {(props) => <AddTodoScreen {...props} addTodo={addTodo} />}
+        </Stack.Screen>
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 80,
-    paddingHorizontal: 20,
-    backgroundColor: "#ffffff",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 25,
-    textAlign: "center",
-    color: "#111111",
-  },
-  list: {
-    paddingBottom: 120,
-  },
-  todoItem: {
-    padding: 18,
-    backgroundColor: "#f2f2f2",
-    marginBottom: 14,
-    borderRadius: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  todoText: {
-    fontSize: 16,
-    color: "#222222",
-  },
-  button: {
-    position: "absolute",
-    bottom: 35,
-    left: 20,
-    right: 20,
-    backgroundColor: "#1E90FF",
-    padding: 18,
-    borderRadius: 16,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-});
