@@ -8,41 +8,47 @@ import {
   Alert,
 } from "react-native";
 
-export default function AddTodoScreen({ navigation, addTodo }) {
+export default function AddTodoScreen({ navigation, route }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
-  const saveTodo = () => {
+  function saveTodo() {
     if (title.trim() === "" || description.trim() === "") {
-      Alert.alert("Error", "Please enter both title and description");
+      Alert.alert("Error", "Please enter both title and description.");
       return;
     }
 
-    addTodo({
+    const newTodo = {
+      id: Date.now(),
       title: title,
       description: description,
-    });
+      expanded: false,
+      completed: false,
+    };
 
+    route.params.addTodo(newTodo);
+
+    Alert.alert("Success", "New todo item added.");
     navigation.goBack();
-  };
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Title</Text>
+      <Text style={styles.title}>Add New Todo</Text>
+
       <TextInput
         style={styles.input}
-        placeholder="Enter task title"
+        placeholder="Title"
         value={title}
         onChangeText={setTitle}
       />
 
-      <Text style={styles.label}>Description</Text>
       <TextInput
-        style={[styles.input, styles.descriptionInput]}
-        placeholder="Enter task description"
+        style={styles.descriptionInput}
+        placeholder="Description"
         value={description}
         onChangeText={setDescription}
-        multiline
+        multiline={true}
       />
 
       <View style={styles.buttonRow}>
@@ -50,11 +56,11 @@ export default function AddTodoScreen({ navigation, addTodo }) {
           style={styles.cancelButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.cancelText}>Cancel</Text>
+          <Text style={styles.buttonText}>Cancel</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.saveButton} onPress={saveTodo}>
-          <Text style={styles.saveText}>Save</Text>
+          <Text style={styles.buttonText}>Save</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -64,55 +70,67 @@ export default function AddTodoScreen({ navigation, addTodo }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "#f5f6fa",
+    backgroundColor: "#f3f4f6",
+    paddingHorizontal: 24,
+    paddingTop: 70,
   },
-  label: {
-    fontSize: 16,
+
+  title: {
+    fontSize: 32,
     fontWeight: "bold",
-    marginBottom: 8,
-    color: "#222",
+    color: "#111827",
+    marginBottom: 28,
   },
+
   input: {
     backgroundColor: "white",
-    padding: 14,
-    borderRadius: 12,
-    fontSize: 16,
-    marginBottom: 20,
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#e5e7eb",
+    borderRadius: 14,
+    padding: 16,
+    fontSize: 16,
+    marginBottom: 16,
   },
+
   descriptionInput: {
-    height: 140,
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 14,
+    padding: 16,
+    fontSize: 16,
+    height: 150,
     textAlignVertical: "top",
+    marginBottom: 16,
   },
+
   buttonRow: {
     flexDirection: "row",
-    gap: 12,
     marginTop: "auto",
+    marginBottom: 28,
   },
+
   cancelButton: {
     flex: 1,
+    backgroundColor: "#9ca3af",
     padding: 16,
-    borderRadius: 12,
-    backgroundColor: "#e5e7eb",
+    borderRadius: 14,
     alignItems: "center",
+    marginRight: 6,
   },
+
   saveButton: {
     flex: 1,
-    padding: 16,
-    borderRadius: 12,
     backgroundColor: "#2563eb",
+    padding: 16,
+    borderRadius: 14,
     alignItems: "center",
+    marginLeft: 6,
   },
-  cancelText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  saveText: {
-    fontSize: 16,
-    fontWeight: "bold",
+
+  buttonText: {
     color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
